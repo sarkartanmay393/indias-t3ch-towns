@@ -3,6 +3,9 @@
 An interactive map of tech company offices across India's biggest cities — starting with Pune, expanding
 to Bengaluru, Delhi, Kolkata, and Mumbai. Built with Next.js (App Router) and Mapbox GL JS.
 
+<img width="1436" height="785" alt="image" src="https://github.com/user-attachments/assets/e287d76c-fb1e-459e-8551-88523698ea84" />
+
+
 ## Getting started
 
 1. Copy `.env.local.example` to `.env.local` and fill in a Mapbox public access token from
