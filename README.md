@@ -1,4 +1,4 @@
-# TechCities
+# India's T3ch Towns
 
 An interactive map of tech company offices across India's biggest cities — starting with Pune, expanding
 to Bengaluru, Delhi, Kolkata, and Mumbai. Built with Next.js (App Router) and Mapbox GL JS.
