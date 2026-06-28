@@ -3,14 +3,18 @@
   "version": "0.1.0",
   "description": "Interactive map of tech company offices across India's biggest cities, starting with Pune.",
   "private": true,
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.18"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "geocode": "tsx --env-file=.env.local --env-file-if-exists=.env scripts/geocode.mjs",
-    "fetch-google-companies": "node --env-file=.env.local --env-file-if-exists=.env scripts/fetch-google-companies.mjs",
-    "fetch-named-companies": "tsx --env-file=.env.local --env-file-if-exists=.env scripts/fetch-named-companies.mjs"
+    "fetch-companies": "node --env-file=.env.local --env-file-if-exists=.env scripts/fetch-companies.mjs",
+    "promote-candidates": "node scripts/promote-candidates.mjs",
+    "validate-data": "node scripts/validate-data.mjs"
   },
   "dependencies": {
     "mapbox-gl": "^3.25.0",

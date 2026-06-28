@@ -125,3 +125,60 @@ body {
   color: var(--color-ink-muted);
   line-height: 1.45;
 }
+
+.locate-ctrl-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 29px;
+  height: 29px;
+  background: var(--color-paper);
+  border: none;
+  cursor: pointer;
+  color: var(--color-ink-muted);
+}
+
+.locate-ctrl-btn:hover {
+  color: var(--color-clay);
+}
+
+.locate-ctrl-btn.is-loading {
+  color: var(--color-clay);
+  animation: locate-pulse 1s ease-in-out infinite;
+}
+
+@keyframes locate-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.user-location-dot {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #2f6fed;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(31, 30, 29, 0.35);
+}
+
+.user-location-dot::after {
+  content: "";
+  position: absolute;
+  inset: -10px;
+  border-radius: 50%;
+  background: rgba(47, 111, 237, 0.22);
+  animation: locate-ring 2.2s ease-out infinite;
+}
+
+@keyframes locate-ring {
+  0% {
+    transform: scale(0.4);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}

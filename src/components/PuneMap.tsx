@@ -12,6 +12,45 @@ const PUNE_BOUNDS: [[number, number], [number, number]] = [
   [73.99, 18.65],
 ];
 const PUNE_CENTER: [number, number] = [73.8567, 18.5204];
+const LOCATE_ZOOM = 15;
+
+function isWithinPuneBounds(lng: number, lat: number): boolean {
+  const [[minLng, minLat], [maxLng, maxLat]] = PUNE_BOUNDS;
+  return lng >= minLng && lng <= maxLng && lat >= minLat && lat <= maxLat;
+}
+
+const LOCATE_ICON_SVG = `<svg style="width:100%;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>`;
+
+class LocateControl implements mapboxgl.IControl {
+  private container: HTMLDivElement;
+  private button: HTMLButtonElement;
+
+  constructor(onClick: () => void) {
+    this.container = document.createElement("div");
+    this.container.className = "mapboxgl-ctrl mapboxgl-ctrl-group";
+
+    this.button = document.createElement("button");
+    this.button.type = "button";
+    this.button.className = "locate-ctrl-btn";
+    this.button.setAttribute("aria-label", "Find my location");
+    this.button.innerHTML = LOCATE_ICON_SVG;
+    this.button.addEventListener("click", onClick);
+
+    this.container.appendChild(this.button);
+  }
+
+  onAdd() {
+    return this.container;
+  }
+
+  onRemove() {
+    this.container.parentNode?.removeChild(this.container);
+  }
+
+  setLoading(loading: boolean) {
+    this.button.classList.toggle("is-loading", loading);
+  }
+}
 
 // Permanent tilted 3D camera angle, matching the look chosen in Mapbox Studio.
 const DEFAULT_PITCH = 60;
@@ -28,9 +67,9 @@ const BASEMAP_CONFIG: Record<string, unknown> = {
   showIndoor: false,
   showPlaceLabels: false,
   showPointOfInterestLabels: false,
-  showTransitLabels: false,
+  showTransitLabels: true,
   showAdminBoundaries: false,
-  showPedestrianRoads: false,
+  showPedestrianRoads: true,
   showRoadLabels: true,
   colorTrunks: "hsl(235, 0%, 100%)",
   colorRoads: "hsl(224, 0%, 100%)",
@@ -76,11 +115,12 @@ function buildMarkerElement(company: Company): HTMLDivElement {
   el.className = "company-marker";
   // Set explicit size inline so the badge can't accidentally collapse to its
   // icon's intrinsic size if the stylesheet hasn't loaded yet.
-  el.style.width = "24px";
-  el.style.height = "24px";
+  el.style.width = "18px";
+  el.style.height = "18px";
   el.style.borderRadius = "25%";
   el.style.backgroundColor = color;
-  el.innerHTML = companyIconSvg(company.category);
+  el.title = company.name; // native hover tooltip
+  el.innerHTML = companyIconSvg(company.category, 12);
   return el;
 }
 
@@ -95,6 +135,7 @@ export function PuneMap({
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<Map<string, mapboxgl.Marker>>(new Map());
   const openMarkerRef = useRef<mapboxgl.Marker | null>(null);
+  const userMarkerRef = useRef<mapboxgl.Marker | null>(null);
 
   useEffect(() => {
     const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
@@ -126,6 +167,34 @@ export function PuneMap({
 
     map.addControl(new mapboxgl.NavigationControl(), "top-right");
 
+    function locateUser() {
+      if (!("geolocation" in navigator)) return;
+      locateControl.setLoading(true);
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          locateControl.setLoading(false);
+          const { longitude, latitude } = position.coords;
+          if (!isWithinPuneBounds(longitude, latitude)) return; // outside the map's coverage — keep the default Pune view
+
+          if (userMarkerRef.current) {
+            userMarkerRef.current.setLngLat([longitude, latitude]);
+          } else {
+            const el = document.createElement("div");
+            el.className = "user-location-dot";
+            el.title = "Your location";
+            userMarkerRef.current = new mapboxgl.Marker({ element: el }).setLngLat([longitude, latitude]).addTo(map);
+          }
+          map.flyTo({ center: [longitude, latitude], zoom: LOCATE_ZOOM, essential: true });
+        },
+        () => locateControl.setLoading(false), // permission denied or unavailable — keep the default Pune view
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+      );
+    }
+    const locateControl = new LocateControl(locateUser);
+    map.addControl(locateControl, "top-right");
+    map.on("load", () => locateUser()); // best-effort: only prompts if permission hasn't already been decided
+
+    const markers = markersRef.current;
     for (const company of companies) {
       if (company.lng == null || company.lat == null) continue;
 
@@ -140,7 +209,7 @@ export function PuneMap({
         .setPopup(popup)
         .addTo(map);
 
-      markersRef.current.set(company.id, marker);
+      markers.set(company.id, marker);
     }
 
     // Resize the canvas whenever the container changes size (e.g. sidebar toggling).
@@ -151,7 +220,8 @@ export function PuneMap({
       resizeObserver.disconnect();
       map.remove();
       mapRef.current = null;
-      markersRef.current.clear();
+      markers.clear();
+      userMarkerRef.current = null;
     };
   }, [companies]);
 
@@ -162,7 +232,9 @@ export function PuneMap({
     const marker = markersRef.current.get(selectedId);
     if (!marker) return;
 
-    openMarkerRef.current?.getPopup()?.isOpen() && openMarkerRef.current.togglePopup();
+    if (openMarkerRef.current?.getPopup()?.isOpen()) {
+      openMarkerRef.current.togglePopup();
+    }
 
     const { lng, lat } = marker.getLngLat();
     map.flyTo({ center: [lng, lat], zoom: SELECTED_ZOOM, essential: true });

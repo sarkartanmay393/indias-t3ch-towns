@@ -17,8 +17,6 @@ const ICON_BODY: Record<Company["category"], string> = {
   Manufacturing: `<path d="M3 21V10l5 4V10l5 4V8l6 4v9H3Z"/><line x1="3" y1="21" x2="21" y2="21"/>`,
   // bolt
   "Infrastructure & Energy": `<path d="M13 2 4 14h7l-1 8 10-12h-7l1-8Z"/>`,
-  // search/discovered
-  Discovered: `<circle cx="11" cy="11" r="6.5"/><line x1="20" y1="20" x2="15.5" y2="15.5"/>`,
 };
 
 export function companyIconSvg(category: Company["category"], size = 16): string {
@@ -36,5 +34,4 @@ export const CATEGORY_COLOR: Record<Company["category"], string> = {
   Consulting: "#4A4A72", // indigo-slate
   Manufacturing: "#6B4226", // rust brown
   "Infrastructure & Energy": "#7A6B2E", // olive amber
-  Discovered: "#6B5F54", // stone taupe
 };

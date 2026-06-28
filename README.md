@@ -1,45 +1,62 @@
-A map of Pune showing tech company office locations, built with Next.js and Mapbox GL JS.
+# TechCities
 
-## Pune Tech Office Map
+An interactive map of tech company offices across India's biggest cities — starting with Pune, expanding
+to Bengaluru, Delhi, Kolkata, and Mumbai. Built with Next.js (App Router) and Mapbox GL JS.
 
-1. Copy `.env.local.example` to `.env.local` and fill in a Mapbox access token from https://account.mapbox.com/access-tokens/.
-2. Edit `src/data/companies.ts` to add/remove offices (name + address). Addresses are a best-effort draft — verify before relying on them.
-3. Run `npm run geocode` to resolve addresses to coordinates within Pune's bounding box. This writes `src/data/companies.geocoded.json` (regenerate it any time the company list changes).
-4. `npm run dev` and open http://localhost:3000 — the map is locked to Pune's bounds so nothing else is reachable by panning/zooming.
+## Getting started
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+1. Copy `.env.local.example` to `.env.local` and fill in a Mapbox public access token from
+   https://account.mapbox.com/access-tokens/.
+2. `npm install`
+3. `npm run dev` and open http://localhost:3000.
 
-## Getting Started
+The map is locked to Pune's bounds — nothing else is reachable by panning or zooming yet.
 
-First, run the development server:
+## Project structure
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```
+src/
+  app/          Next.js App Router pages, metadata, layout
+  components/   Map, sidebar, marker/popup rendering
+  data/
+    companies.ts   TypeScript types only (Company, Category)
+    dump.json       the single source of truth — all company data the app reads
+    merged.ts       re-exports dump.json as typed Company[]
+
+scripts/        data pipeline tooling (not part of the webapp)
+data/           data pipeline inputs/outputs (not part of the webapp) — see data/README.md
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`src/` contains only webapp code plus the one data file it reads (`dump.json`). Everything that
+*produces* or *grows* that data — fetch scripts, query seed lists, an unreviewed candidates inbox —
+lives outside `src/`, in `scripts/` and `data/`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Contributing data
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The fastest way to fix or add a company: edit `src/data/dump.json` directly and open a PR. Each entry is
 
-## Learn More
+```json
+{ "id": "...", "name": "...", "address": "...", "category": "...", "lat": 18.x, "lng": 73.x }
+```
 
-To learn more about Next.js, take a look at the following resources:
+Run `npm run validate-data` before committing to catch schema issues, duplicate ids, invalid categories,
+or coordinates outside Pune's bounds.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+For bulk discovery via the Google Places API (find companies we don't have yet, or resolve addresses for
+named companies), see [`data/README.md`](data/README.md).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Scripts
 
-## Deploy on Vercel
+| Command | Purpose |
+|---|---|
+| `npm run dev` | Start the dev server |
+| `npm run build` | Production build |
+| `npm run lint` | Lint |
+| `npm run validate-data` | Validate `src/data/dump.json` |
+| `npm run fetch-companies` | Discover/resolve candidate companies into `data/candidates.json` |
+| `npm run promote-candidates` | Merge reviewed candidates into `src/data/dump.json` |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Deploy
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Deploys cleanly to [Vercel](https://vercel.com/new) — set `NEXT_PUBLIC_MAPBOX_TOKEN` as a project
+environment variable.
