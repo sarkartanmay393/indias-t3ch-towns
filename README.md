@@ -1,3 +1,12 @@
+A map of Pune showing tech company office locations, built with Next.js and Mapbox GL JS.
+
+## Pune Tech Office Map
+
+1. Copy `.env.local.example` to `.env.local` and fill in a Mapbox access token from https://account.mapbox.com/access-tokens/.
+2. Edit `src/data/companies.ts` to add/remove offices (name + address). Addresses are a best-effort draft — verify before relying on them.
+3. Run `npm run geocode` to resolve addresses to coordinates within Pune's bounding box. This writes `src/data/companies.geocoded.json` (regenerate it any time the company list changes).
+4. `npm run dev` and open http://localhost:3000 — the map is locked to Pune's bounds so nothing else is reachable by panning/zooming.
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
